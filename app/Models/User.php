@@ -2,7 +2,10 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use App\Enums\UserGroup;
+use App\Enums\UserStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -21,6 +24,12 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'phone',
+        'status',
+        'group_id',
+        'note',
+        'avatar',
+        'code',
     ];
 
     /**
@@ -41,5 +50,12 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'status' => UserStatus::class,
+        'group_id' => UserGroup::class,
     ];
+
+    public function wallet()
+    {
+        return $this->hasOne(Wallet::class);
+    }
 }
