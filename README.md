@@ -1,66 +1,166 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Card Nexus
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Ứng dụng web quản lý thẻ/ví xây dựng trên **Laravel 10**, **Inertia.js**, **React** và **Vite**.
 
-## About Laravel
+## Yêu cầu
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+| Thành phần | Phiên bản |
+|------------|-----------|
+| PHP | ^8.1 (khuyến nghị 8.2) |
+| Composer | 2.x |
+| Node.js | 20.x |
+| MySQL | 8.0 |
+| Redis | 7.x |
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+**PHP extensions:** `pdo_mysql`, `mbstring`, `bcmath`, `pcntl`, `zip`, `redis` (hoặc dùng `predis` qua Composer).
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Cài đặt local (không Docker)
 
-## Learning Laravel
+```bash
+cp .env.example .env
+composer install
+php artisan key:generate
+php artisan migrate
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+npm ci
+npm run build   # hoặc npm run dev khi phát triển frontend
+php artisan serve
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- Ứng dụng: http://127.0.0.1:8000  
+- Vite dev server: http://127.0.0.1:5173 (chạy `npm run dev` song song)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Cấu hình mặc định trong `.env.example`: timezone `Asia/Ho_Chi_Minh`, locale `vi`, cache/queue qua Redis.
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Docker
 
-### Premium Partners
+Stack gồm **PHP-FPM**, **Nginx**, **MySQL**, **Redis** và **queue worker** (`php artisan queue:work redis`).
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+### Cấu trúc file
 
-## Contributing
+```
+Dockerfile              # Multi-stage build (frontend, vendor, production, web, development)
+docker-compose.yml      # Production
+docker-compose.dev.yml  # Overlay cho môi trường dev
+.env.docker.example     # Biến môi trường gợi ý cho Docker
+docker/
+  nginx/default.conf
+  php/conf.d/laravel.ini
+  entrypoint.sh
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Production
 
-## Code of Conduct
+```bash
+cp .env.docker.example .env
+# Tạo APP_KEY: php artisan key:generate (trên máy host) hoặc để entrypoint tạo khi khởi động
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+docker compose up -d --build
+```
 
-## Security Vulnerabilities
+| Biến | Mặc định | Ghi chú |
+|------|----------|---------|
+| `APP_PORT` | `8080` | Cổng Nginx |
+| `APP_URL` | `http://localhost:8080` | Khớp với cổng truy cập |
+| `DB_DATABASE` | `card_nexus` | |
+| `DB_USERNAME` / `DB_PASSWORD` | `card_nexus` / `secret` | |
+| `RUN_MIGRATIONS` | `true` | Tự chạy migrate khi container `app` start |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Truy cập: **http://localhost:8080**
 
-## License
+Chỉ build lại image ứng dụng (tránh lỗi tag trùng khi build song song):
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+docker compose build app
+docker compose up -d
+```
+
+### Development (Docker)
+
+Mount mã nguồn, bật debug, chạy Vite HMR:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+```
+
+| Dịch vụ | URL / ghi chú |
+|---------|----------------|
+| Ứng dụng (Nginx) | http://localhost:8080 |
+| Vite | http://localhost:5173 |
+
+Trong container `app`, cài dependency lần đầu (nếu cần):
+
+```bash
+docker compose exec app composer install
+docker compose exec app php artisan key:generate
+```
+
+### Dịch vụ Docker
+
+| Service | Image / build | Vai trò |
+|---------|---------------|---------|
+| `app` | `card-nexus-app:latest` | PHP 8.2-FPM, Laravel |
+| `nginx` | `card-nexus-web:latest` | Reverse proxy, static `public/` |
+| `queue` | Dùng chung image `app` | Xử lý hàng đợi Redis |
+| `mysql` | `mysql:8.0` | Cơ sở dữ liệu |
+| `redis` | `redis:7-alpine` | Cache, session, queue |
+
+> **Lưu ý:** Chỉ service `app` có `build:`; `queue` tái sử dụng image `card-nexus-app:latest` để tránh xung đột tag khi `docker compose build`.
+
+### Stage trong Dockerfile
+
+| Stage | Mô tả |
+|-------|--------|
+| `frontend` | `npm ci` + `npm run build` (Vite/React) |
+| `vendor` | `composer install --no-dev` (PHP 8.2) |
+| `production` | PHP-FPM + extensions |
+| `web` | Nginx + thư mục `public` đã build |
+| `development` | Thêm Node.js và Composer cho dev |
+
+### Lệnh thường dùng
+
+```bash
+# Xem log
+docker compose logs -f app
+
+# Artisan
+docker compose exec app php artisan migrate
+docker compose exec app php artisan tinker
+
+# Dừng và xóa container (giữ volume DB)
+docker compose down
+
+# Dừng và xóa cả volume (mất dữ liệu DB)
+docker compose down -v
+```
+
+### Xử lý sự cố
+
+**`image "card-nexus-app:latest": already exists`**
+
+Hai service cùng build một tag. Đã cấu hình chỉ `app` build; chạy `docker compose build app` rồi `docker compose up -d`.
+
+**Đổi code production**
+
+Image production nhúng sẵn assets và `vendor`. Sau khi sửa code hoặc frontend:
+
+```bash
+docker compose build app nginx
+docker compose up -d
+```
+
+---
+
+## Kiểm thử
+
+```bash
+php artisan test
+# hoặc trong Docker:
+docker compose exec app php artisan test
+```
+
+## Giấy phép
+
+MIT
