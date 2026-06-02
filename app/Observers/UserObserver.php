@@ -4,8 +4,10 @@ namespace App\Observers;
 
 use App\Enums\UserGroup;
 use App\Enums\UserStatus;
-use App\Enums\WalletStatus;
 use App\Models\User;
+use App\Services\WalletService;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 
 class UserObserver
 {
@@ -31,21 +33,26 @@ class UserObserver
      */
     public function updated(User $user): void
     {
-        //
+        if($user->isDirty('status') && $user->status === UserStatus::BANNED) {
+            // send notify to user via email to inform account is banned
+            // ban all wallets of user
+            $walletService = new WalletService();
+            foreach ($user->wallets as $wallet) {
+                $walletService->banWallet($wallet, $user->note ?? 'User account is banned');
+            }
+
+            // 2. Kích hoạt lệnh xóa phiên đăng nhập trên Redis để đá User khỏi hệ thống
+            Redis::del("user_session:{$user->id}");
+
+            // 3. Bắn cảnh báo khẩn cấp về Chatwork / Telegram cho Đội Kỹ thuật
+            Log::alert("CẢNH BÁO: Phát hiện gian lận số dư tại User ID: {$user->id}. Ví đã bị khóa tự động.");
+        }
     }
 
     // handle the user deleting event
     public function deleting(User $user): void
     {
-        $user->status = UserStatus::DELETED;
-        $user->email = 'deleted-' . $user->email;
-
-        // close wallet if exists
-        if ($user->wallet) {
-            $user->wallet->status = WalletStatus::CLOSED;
-            $user->wallet->note = 'Đóng ví do tài khoản bị xóa';
-            $user->wallet->save();
-        }
+        //
     }
 
     /**

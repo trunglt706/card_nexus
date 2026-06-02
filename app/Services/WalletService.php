@@ -5,8 +5,6 @@ namespace App\Services;
 use App\Enums\WalletStatus;
 use App\Models\User;
 use App\Models\Wallet;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Redis;
 
 class WalletService
 {
@@ -73,11 +71,5 @@ class WalletService
             'status' => WalletStatus::BANNED,
             'note' => $reason
         ]);
-
-        // 2. Kích hoạt lệnh xóa phiên đăng nhập trên Redis để đá User khỏi hệ thống
-        Redis::del("user_session:{$wallet->user_id}");
-
-        // 3. Bắn cảnh báo khẩn cấp về Chatwork / Telegram cho Đội Kỹ thuật
-        Log::alert("CẢNH BÁO: Phát hiện gian lận số dư tại User ID: {$wallet->user_id}. Ví đã bị khóa tự động.");
     }
 }

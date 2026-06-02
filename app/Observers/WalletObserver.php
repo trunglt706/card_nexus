@@ -10,7 +10,8 @@ class WalletObserver
     public function creating(Wallet $wallet): void
     {
         $wallet->checksum = $wallet->checksum ?? uniqid('WALLET_', true);
-        $wallet->balance = $wallet->balance ?? 0.00;
+        $wallet->balance = 0.00;
+        $wallet->holding_balance = 0.00;
         $wallet->status = $wallet->status ?? 'active';
     }
     /**

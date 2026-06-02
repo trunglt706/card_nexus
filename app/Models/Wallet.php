@@ -7,12 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Wallet extends Model
 {
-    protected $fillable = ['user_id', 'balance', 'checksum', 'status', 'note'];
+    protected $fillable = ['user_id', 'status', 'note'];
 
     protected $casts = [
         'balance' => 'decimal:2',
         'user_id' => 'integer',
         'status' => WalletStatus::class,
+        'holding_balance' => 'decimal:2',
     ];
 
     public function user()

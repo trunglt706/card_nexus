@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->unique()->constrained('users')->onDelete('cascade');
             $table->decimal('balance', 16, 2)->default(0.00); // Đảm bảo số tiền lớn không bị làm tròn sai lệch
+            $table->decimal('holding_balance', 15, 2)->default(0.00); // Tiền đóng băng khi đang chờ rút hoặc đang treo lệnh mua
             $table->string('checksum', 64); // Lưu chuỗi mã hóa HMAC-SHA256 bảo vệ số dư
             $table->string('status', 30)->default('active'); // active, suspended, closed
             $table->string('note')->nullable();
